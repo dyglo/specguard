@@ -159,6 +159,16 @@ export async function runToolChecks(spec: Spec, repoRoot: string): Promise<ToolO
                 }
             }
 
+            // B) Tool runner safety
+            // 4) Assertions and filtering
+            if (!finalCmd) {
+                throw new Error('Command cannot be empty');
+            }
+            if (!Array.isArray(finalArgs)) {
+                throw new Error('Arguments must be an array');
+            }
+            finalArgs = finalArgs.filter(Boolean);
+
             const res = await runSpawn(finalCmd!, finalArgs!, cwd, env, tool.timeout_seconds, shell);
             const duration = Date.now() - startTime;
 

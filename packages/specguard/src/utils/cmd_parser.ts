@@ -46,12 +46,15 @@ export function parseCommand(command: string): { cmd: string, args: string[] } {
         args.push(current);
     }
 
-    if (args.length === 0) {
-        return { cmd: '', args: [] };
+    // Requirement: Ensure no empty string arguments
+    const filteredArgs = args.filter(arg => arg.length > 0);
+
+    if (filteredArgs.length === 0) {
+        throw new Error(`Invalid tool command: "${command}"`);
     }
 
     return {
-        cmd: args[0],
-        args: args.slice(1)
+        cmd: filteredArgs[0],
+        args: filteredArgs.slice(1)
     };
 }
