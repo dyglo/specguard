@@ -1,0 +1,13 @@
+#!/usr/bin/env node
+
+try {
+    await import('../dist/cli.js');
+} catch (error) {
+    if (error.code === 'ERR_MODULE_NOT_FOUND' && error.message.includes('dist/cli.js')) {
+        console.error('❌ SpecGuard is not built. Run: npm run build --workspaces');
+        process.exit(2);
+    } else {
+        console.error('❌ Unexpected error starting SpecGuard:', error);
+        process.exit(2);
+    }
+}

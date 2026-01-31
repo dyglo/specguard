@@ -1,0 +1,40 @@
+spec_id: "specguard-core-v2"
+version: "2.0.0"
+
+repo:
+  forbidden_globs:
+    - "engine/**"
+    - "core/game/**"
+    - "vendor/**"
+    # Add more protected paths here
+
+deterministic_rules:
+  secret_patterns:
+    - name: "AWS Access Key"
+      regex: "AKIA[0-9A-Z]{16}"
+    - name: "Private RSA Key"
+      regex: "-----BEGIN RSA PRIVATE KEY-----"
+    - name: "Generic API Key Assignment"
+      regex: "api_key\\s*=\\s*['\"][a-zA-Z0-9]{20,}['\"]"
+      # Matches: api_key = "..." with at least 20 chars
+
+tool_verified:
+  steps:
+    - name: "Lint"
+      command: "pnpm lint"
+      optional: true
+
+    - name: "Typecheck"
+      command: "pnpm typecheck"
+      optional: true
+
+    - name: "Test"
+      command: "pnpm test"
+      optional: true
+
+    - name: "Build"
+      command: "pnpm build"
+      optional: true
+
+output_contract:
+  forbid_unverified_tool_claims: true

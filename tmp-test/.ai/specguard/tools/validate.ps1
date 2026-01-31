@@ -1,0 +1,1 @@
+npx specguard validate --spec ".ai\specguard\spec.yaml" --repo-root . --report-dir ".ai\specguard\reports"
