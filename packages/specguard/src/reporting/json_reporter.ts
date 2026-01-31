@@ -86,32 +86,79 @@ export async function generateReport(data: ReportData, reportDir: string) {
 
     // Write MD
     let md = `# SpecGuard Report\n\n`;
-    md += `**Status**: ${data.status}\n`;
+
+    // Agent Summary
+    md += `## 🤖 Agent Summary\n\n`;
+    const isPass = data.status === 'PASS';
+    md += `**Result**: ${isPass ? '✅ PASS' : '❌ FAIL'}\n`;
+    md += `**Changes**: ${data.changedFiles.length} files\n`;
+
+    if (data.violations.length > 0) {
+        md += `**Top Violations**:\n`;
+        // Top 5
+        for (const v of data.violations.slice(0, 5)) {
+            md += `- ${v.type}: ${v.details.slice(0, 100)}${v.details.length > 100 ? '...' : ''}\n`;
+        }
+        if (data.violations.length > 5) {
+            md += `- ... and ${data.violations.length - 5} more\n`;
+        }
+    } else {
+        md += `**Violations**: None\n`;
+    }
+
+    if (processedToolResults.length > 0) {
+        md += `\n**Tools**:\n`;
+        md += `| Tool | Status | Optional | Exit |\n`;
+        md += `| --- | --- | --- | --- |\n`;
+        for (const t of processedToolResults) {
+            md += `| ${t.name} | ${t.status} | ${t.optional} | ${t.exit_code ?? '-'} |\n`;
+        }
+    }
+
+    md += `\n**Next Action**: `;
+    if (isPass) {
+        md += `Proceed with changes.\n`;
+    } else {
+        md += `Fix violations and re-run: \`npx specguard validate\`\n`;
+    }
+
+    md += `\n---\n\n`; // Separator
+
+    // Detailed Report
+    md += `## Run Details\n`;
     md += `**Run ID**: ${runId}\n`;
     md += `**Date**: ${data.timestamp}\n`;
     md += `**Mode**: ${data.runMeta.diffMode}\n`;
-    md += `**Changes**: ${data.changedFiles.length} files\n\n`;
+    md += `**Platform**: ${os.platform()} / Node ${process.version}\n\n`;
 
     if (data.violations.length > 0) {
-        md += `## ❌ Violations\n`;
+        md += `## ❌ Violations Full List\n`;
         for (const v of data.violations) {
             md += `- **${v.type}**: ${v.file || 'N/A'} - ${v.details}\n`;
         }
-    } else {
-        md += `## ✅ No Violations Found\n`;
     }
 
-    md += `\n## Tool Execution\n`;
+    md += `\n## Tool Execution Details\n`;
     if (processedToolResults.length === 0) {
         md += `No tools configured.\n`;
     } else {
         for (const t of processedToolResults) {
-            const icon = t.exit_code === 0 ? '✅' : (t.optional ? '⚠️' : '❌');
+            let icon = '✅';
+            if (t.status === 'FAILED') icon = t.optional ? '⚠️' : '❌';
+            if (t.status === 'SKIPPED') icon = '⏭️';
+
             md += `### ${icon} ${t.name}\n`;
+            md += `- Status: **${t.status}**\n`;
             md += `- Command: \`${t.command}\`\n`;
-            md += `- Exit Code: ${t.exit_code}\n`;
+            if (t.reason) md += `- Reason: ${t.reason}\n`;
+            if (t.exit_code !== null) md += `- Exit Code: ${t.exit_code}\n`;
+            md += `- Duration: ${t.duration_ms}ms\n`;
+
             if (t.output_tail) {
-                md += `\`\`\`\n${t.output_tail}\n\`\`\`\n`;
+                md += `Output Tail:\n\`\`\`\n${t.output_tail}\n\`\`\`\n`;
+            }
+            if (t.log_path) {
+                md += `Full Log: [${path.basename(t.log_path)}](${t.log_path})\n`;
             }
         }
     }

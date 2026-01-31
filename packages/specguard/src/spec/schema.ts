@@ -19,7 +19,10 @@ export const SpecSchema = z.object({
             optional: z.boolean().optional(),
             timeout_seconds: z.number().optional(),
             env_allowlist: z.array(z.string()).optional(),
-            cwd: z.string().optional()
+            env: z.record(z.string()).optional(),
+            cwd: z.string().optional(),
+            skip_if_missing: z.boolean().optional(),
+            allow_shell: z.boolean().optional()
         })).optional()
     }).optional(),
     output_contract: z.object({

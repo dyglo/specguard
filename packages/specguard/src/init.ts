@@ -22,21 +22,31 @@ tool_verified:
     - name: "Lint"
       command: "npm run lint"
       optional: true
+      skip_if_missing: true
 `;
 
 const AGENTS_MD_TEMPLATE = `
 ## 🛡️ SpecGuard Enforced
 
-This repository uses SpecGuard for validation.
+This repository uses **SpecGuard** to ensure code quality and security.
+As an AI agent, you **MUST** follow this workflow:
 
-**Workflow:**
-1. Make changes.
-2. Run validation:
-   \`\`\`bash
-   npm exec specguard validate
-   \`\`\`
-3. Fix any violations.
-4. Include validation report in your PR/Final Answer.
+1.  **Edit**: Make your code changes.
+2.  **Validate**: Run the validation script to check for issues.
+    \`\`\`bash
+    npx specguard validate --staged
+    \`\`\`
+3.  **Repair**: If validation fails, fix the errors and re-run.
+4.  **Report**: Include the validation summary in your final response.
+
+**Artifacts Location:**
+- Spec: \`.ai/specguard/spec.yaml\`
+- Reports: \`.ai/specguard/reports/\`
+
+**Safety Rules:**
+- 🚫 NO secrets in code.
+- 🚫 NO shell execution in tool steps (unless explicitly allowed).
+- ✅ ALWAYS verify your changes.
 `;
 
 export async function init(cwd: string, force: boolean) {
@@ -44,10 +54,17 @@ export async function init(cwd: string, force: boolean) {
   const reportsDir = path.join(specDir, 'reports');
   const specPath = path.join(specDir, 'spec.yaml');
   const agentsMdPath = path.join(cwd, 'AGENTS.md');
+  const gitignorePath = path.join(cwd, '.gitignore');
 
   // Create directories
-  fs.mkdirSync(reportsDir, { recursive: true });
-  fs.writeFileSync(path.join(reportsDir, '.gitkeep'), '');
+  if (!fs.existsSync(reportsDir)) {
+    fs.mkdirSync(reportsDir, { recursive: true });
+  }
+
+  const gitkeepPath = path.join(reportsDir, '.gitkeep');
+  if (!fs.existsSync(gitkeepPath)) {
+    fs.writeFileSync(gitkeepPath, '');
+  }
 
   // Create spec.yaml
   if (fs.existsSync(specPath) && !force) {
@@ -61,7 +78,9 @@ export async function init(cwd: string, force: boolean) {
   if (fs.existsSync(agentsMdPath)) {
     const content = fs.readFileSync(agentsMdPath, 'utf-8');
     if (!content.includes('SpecGuard Enforced')) {
-      fs.appendFileSync(agentsMdPath, AGENTS_MD_TEMPLATE);
+      // Append clearly with a separator
+      const appendContent = `\n\n---\n${AGENTS_MD_TEMPLATE}`;
+      fs.appendFileSync(agentsMdPath, appendContent);
       console.log('✅ Updated AGENTS.md');
     } else {
       console.log('ℹ️  AGENTS.md already contains SpecGuard instructions.');
@@ -71,18 +90,51 @@ export async function init(cwd: string, force: boolean) {
     console.log('✅ Created AGENTS.md');
   }
 
-  // Create legacy wrapper scripts for convenience? 
-  // User asked for .ai/specguard/tools/validate.sh
-  const toolsDir = path.join(specDir, 'tools');
-  fs.mkdirSync(toolsDir, { recursive: true });
+  // Update .gitignore
+  let gitignoreContent = '';
+  if (fs.existsSync(gitignorePath)) {
+    gitignoreContent = fs.readFileSync(gitignorePath, 'utf-8');
+  }
 
+  const ignores = [
+    '.ai/specguard/reports/**',
+    '!.ai/specguard/reports/.gitkeep'
+  ];
+
+  let addedIgnore = false;
+  // Ensure we end with newline before appending if file not empty
+  if (gitignoreContent && !gitignoreContent.endsWith('\n')) {
+    gitignoreContent += '\n';
+  }
+
+  for (const ign of ignores) {
+    if (!gitignoreContent.includes(ign)) {
+      gitignoreContent += `${ign}\n`;
+      addedIgnore = true;
+    }
+  }
+
+  if (addedIgnore) {
+    fs.writeFileSync(gitignorePath, gitignoreContent);
+    console.log('✅ Updated .gitignore');
+  } else {
+    console.log('ℹ️  .gitignore already configured.');
+  }
+
+  // Create helper scripts
+  const toolsDir = path.join(specDir, 'tools');
+  if (!fs.existsSync(toolsDir)) {
+    fs.mkdirSync(toolsDir, { recursive: true });
+  }
+
+  // Using npx specguard@latest as requested
   const shScript = `#!/bin/bash
-npx specguard validate --spec "${path.posix.join('.ai', 'specguard', 'spec.yaml')}" --repo-root . --report-dir "${path.posix.join('.ai', 'specguard', 'reports')}"
+npx specguard@latest validate
 `;
   fs.writeFileSync(path.join(toolsDir, 'validate.sh'), shScript, { mode: 0o755 });
 
-  const ps1Script = `npx specguard validate --spec ".ai\\specguard\\spec.yaml" --repo-root . --report-dir ".ai\\specguard\\reports"`;
+  const ps1Script = `npx specguard@latest validate`;
   fs.writeFileSync(path.join(toolsDir, 'validate.ps1'), ps1Script);
 
-  console.log('✅ Created helper scripts in .ai/specguard/tools/');
+  console.log('✅ Created validation helper scripts in .ai/specguard/tools/');
 }

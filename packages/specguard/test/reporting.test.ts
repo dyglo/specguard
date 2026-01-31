@@ -26,10 +26,12 @@ describe('generateReport', () => {
             toolResults: [{
                 name: 'TestTool',
                 command: 'echo',
+                status: 'RAN',
                 exit_code: 0,
                 stdout: 'out',
                 stderr: 'err',
-                optional: false
+                optional: false,
+                duration_ms: 100
             }],
             runMeta: { diffMode: 'working', repoRoot: '/repo' }
         };

@@ -2,58 +2,39 @@
 
 SpecGuard is a "Skills++" enforcement engine for code agents. It provides a robust, repository-local mechanism to enforce constraints and validate tooling execution before code is committed or presented to the user.
 
-## Features
+## Documentation
 
-*   **Deterministic Validation**: Enforce file path restrictions (forbidden globs) and scan for secrets.
-*   **Tool Verification**: Run and verify local tools (lint, test, build) with captured output.
-*   **Repo-Local**: Configuration lives in `.ai/specguard/spec.yaml`.
-*   **Agent-Friendly**: Designed to be used by AI agents to self-correct.
+For full guides and reference, see the [Documentation Index](packages/specguard/docs/README.md).
 
-## Quickstart
+- [🚀 Quickstart](packages/specguard/docs/quickstart.md)
+- [🤖 Codex & Agents](packages/specguard/docs/codex-and-agents.md)
+- [🛠️ Spec Reference](packages/specguard/docs/spec-reference.md)
+- [📊 Reports](packages/specguard/docs/reports.md)
+- [🔄 CI Integration](packages/specguard/docs/ci-integration.md)
+- [🔐 Security](packages/specguard/docs/security.md)
 
-### Installation
+## Examples
+
+To see SpecGuard in action, explore the [examples/repo-pack](examples/repo-pack) directory. This serves as a reference implementation of a SpecGuard-hardened repository.
+
+## Installation
 
 ```bash
 npm install specguard
 ```
 
-### Initialization
-
-To set up SpecGuard in a new repository:
+## Quick Commands
 
 ```bash
-npx specguard init
+npx specguard init      # Setup SpecGuard in your repo
+npx specguard validate  # Run validation
 ```
-
-This will create:
-*   `.ai/specguard/spec.yaml`
-*   `AGENTS.md` (if not present, or append instructions)
-
-### Validation
-
-To run validation:
-
-```bash
-npx specguard validate
-```
-
-### CLI Options
-
-*   `init`:
-    *   `--force`: Overwrite existing configuration files.
-
-*   `validate`:
-    *   `--spec <path>`: Path to `spec.yaml` (default: `.ai/specguard/spec.yaml`).
-    *   `--repo-root <path>`: Root of the repository (default: cwd).
-    *   `--report-dir <path>`: Directory to write reports (default: `.ai/specguard/reports`).
-    *   `--diff-mode <mode>`: `working` (default), `staged`, or `range`.
-    *   `--staged`: Alias for `--diff-mode staged`.
-    *   `--base <ref>` / `--head <ref>`: Refs for `range` mode.
 
 ## Structure
 
-*   `packages/specguard`: Core CLI and validation logic (Node.js).
-*   `examples/repo-pack`: Example repository structure.
+- `packages/specguard`: Core CLI and validation logic.
+- `docs/`: Comprehensive guides and references.
+- `examples/`: Reference implementations.
 
 ## License
 

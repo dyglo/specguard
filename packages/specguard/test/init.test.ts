@@ -54,4 +54,33 @@ describe('init command', () => {
 
         expect(writeFile).toHaveBeenCalledWith(expect.stringContaining('spec.yaml'), expect.any(String));
     });
+
+    it('should update .gitignore if needed', async () => {
+        const cwd = '/tmp/repo';
+        vi.spyOn(fs, 'existsSync').mockReturnValue(true);
+        vi.spyOn(fs, 'readFileSync').mockReturnValue('node_modules\n');
+        const writeFile = vi.spyOn(fs, 'writeFileSync');
+
+        await init(cwd, false);
+
+        expect(writeFile).toHaveBeenCalledWith(
+            path.join(cwd, '.gitignore'),
+            expect.stringContaining('.ai/specguard/reports/**')
+        );
+    });
+
+    it('should not duplicate .gitignore entries', async () => {
+        const cwd = '/tmp/repo';
+        vi.spyOn(fs, 'existsSync').mockReturnValue(true);
+        vi.spyOn(fs, 'readFileSync').mockReturnValue('node_modules\n.ai/specguard/reports/**\n!.ai/specguard/reports/.gitkeep\n');
+        const writeFile = vi.spyOn(fs, 'writeFileSync');
+
+        await init(cwd, false);
+
+        // Should not write if already present
+        // Wait, other files (spec.yaml) might trigger writes, but gitignore check is specific.
+        // Actually init writes other files too. 
+        // We can check if writeFileSync was called with .gitignore path specifically.
+        expect(writeFile).not.toHaveBeenCalledWith(path.join(cwd, '.gitignore'), expect.any(String));
+    });
 });
