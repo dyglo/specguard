@@ -1,6 +1,6 @@
 {
     "name": "specguard",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "description": "Production-grade SpecGuard validator",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
@@ -10,7 +10,7 @@
         "node": ">=18"
     },
     "bin": {
-        "specguard": "./bin/specguard"
+        "specguard": "bin/specguard"
     },
     "files": [
         "dist",
