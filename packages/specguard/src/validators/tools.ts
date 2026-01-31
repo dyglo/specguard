@@ -239,30 +239,38 @@ function runSpawn(
         // If shell=true, 'cmd' is the full command string, args should be empty or handled carefully.
         // Node spawn with shell: true treats 'cmd' as command line.
 
-        const cp = spawn(cmd, args, {
-            cwd,
-            shell,
-            env,
-            timeout: timeoutSec ? (timeoutSec * 1000) : 300000 // Default 300s
-        });
+        try {
+            const cp = spawn(cmd, args, {
+                cwd,
+                shell,
+                env,
+                timeout: timeoutSec ? (timeoutSec * 1000) : 300000 // Default 300s
+            });
 
-        let stdout = '';
-        let stderr = '';
+            let stdout = '';
+            let stderr = '';
 
-        cp.stdout.on('data', (d) => stdout += d.toString());
-        cp.stderr.on('data', (d) => stderr += d.toString());
-
-        cp.on('error', (err) => {
-            // reject(err); // Don't reject, just return error code so we can log it
-            resolve({ code: 127, stdout, stderr, reason: `Spawn error: ${err.message}` });
-        });
-
-        cp.on('close', (code, signal) => {
-            if (signal) {
-                resolve({ code: 128 + 15, stdout, stderr, reason: `Killed by signal ${signal} (Timeout?)` });
-            } else {
-                resolve({ code: code ?? -1, stdout, stderr });
+            if (cp.stdout) {
+                cp.stdout.on('data', (d) => stdout += d.toString());
             }
-        });
+            if (cp.stderr) {
+                cp.stderr.on('data', (d) => stderr += d.toString());
+            }
+
+            cp.on('error', (err) => {
+                // reject(err); // Don't reject, just return error code so we can log it
+                resolve({ code: 127, stdout, stderr, reason: `Spawn error: ${err.message}` });
+            });
+
+            cp.on('close', (code, signal) => {
+                if (signal) {
+                    resolve({ code: 128 + 15, stdout, stderr, reason: `Killed by signal ${signal} (Timeout?)` });
+                } else {
+                    resolve({ code: code ?? -1, stdout, stderr });
+                }
+            });
+        } catch (e: any) {
+            resolve({ code: 127, stdout: '', stderr: '', reason: `Spawn failed synchronously: ${e.message}` });
+        }
     });
 }

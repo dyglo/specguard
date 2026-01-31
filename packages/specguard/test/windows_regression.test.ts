@@ -80,5 +80,22 @@ describe('Windows Regression Fix (v0.1.3)', () => {
             await runToolChecks(spec, '.');
             expect(capturedArgs).toEqual(['run']); // empty string filtered out
         });
+
+        it('should handle synchronous spawn crash gracefully', async () => {
+            const spec: any = {
+                tool_verified: {
+                    steps: [{ name: 'Crash', command: 'npm run crash', skip_if_missing: false }]
+                }
+            };
+
+            // Mock spawn to throw synchronously
+            mockSpawn.mockImplementation(() => {
+                throw new Error('spawn EINVAL');
+            });
+
+            const result = await runToolChecks(spec, '.');
+            expect(result.results[0].status).toBe('FAILED');
+            expect(result.results[0].reason).toContain('Spawn failed synchronously: spawn EINVAL');
+        });
     });
 });
