@@ -26,6 +26,12 @@ A concise block at the top containing:
 - **Tools**: A table showing status (`RAN`, `SKIPPED`, `FAILED`) and exit codes.
 - **Next Action**: A hint on what to do next (e.g., "Fix violations and re-run").
 
+### PASS with Warnings
+
+SpecGuard may return **PASS with warnings** when optional tools fail (for example, a missing lint script). This does not block validation, but the report will include warnings such as:
+
+- `SG-TOOL-MISSING`: Optional tool command or script is missing. Recommended fix: add the missing script/binary or remove the optional step from `spec.yaml`.
+
 ## JSON Report Fields
 
 | Field | Description |

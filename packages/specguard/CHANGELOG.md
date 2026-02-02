@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.2.1] - 2026-02-02
+- Feature: Surface PASS-with-warnings for optional tool failures (missing commands/scripts).
+- Feature: Added warning IDs `SG-TOOL-MISSING` and `SG-TOOL-FAILED-OPTIONAL` with actionable guidance.
+- Docs: Clarified PASS-with-warnings behavior and optional tool warnings.
+
 ## [0.2.0] - 2026-02-02
 - Feature: Added repair-json output format for deterministic agent repair loops.
 - Feature: Added policy tamper rule for `.ai/specguard/**` with `--allow-policy-edit` override.
