@@ -170,4 +170,35 @@ describe('runToolChecks', () => {
         mockSpawn.mock.results[0].value.emitClose(0);
         await promise;
     });
+
+    it('should warn when optional tool is missing (exit 127)', async () => {
+        const spec: any = {
+            tool_verified: {
+                steps: [{ name: 'Optional', command: 'missing-cmd', optional: true }]
+            }
+        };
+
+        const promise = runToolChecks(spec, '/repo');
+        mockSpawn.mock.results[0].value.emitStderr('command not found');
+        mockSpawn.mock.results[0].value.emitClose(127);
+        const result = await promise;
+
+        expect(result.violations[0].type).toBe('tool_missing');
+        expect(result.violations[0].severity).toBe('warning');
+    });
+
+    it('should warn when optional tool spawn fails (ENOENT)', async () => {
+        const spec: any = {
+            tool_verified: {
+                steps: [{ name: 'Optional', command: 'missing-cmd', optional: true }]
+            }
+        };
+
+        const promise = runToolChecks(spec, '/repo');
+        mockSpawn.mock.results[0].value.emitError(new Error('spawn missing-cmd ENOENT'));
+        const result = await promise;
+
+        expect(result.violations[0].type).toBe('tool_missing');
+        expect(result.violations[0].severity).toBe('warning');
+    });
 });

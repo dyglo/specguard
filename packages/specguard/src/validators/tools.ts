@@ -22,6 +22,42 @@ interface ToolOutput {
     violations: any[];
 }
 
+export type ToolFailureClassification = 'missing_command' | 'runtime_error' | 'test_fail';
+
+export function classifyToolFailure(result: {
+    exit_code: number | null;
+    stderr?: string;
+    reason?: string;
+}): ToolFailureClassification {
+    const exitCode = result.exit_code ?? -1;
+    const combined = `${result.reason || ''}\n${result.stderr || ''}`.toLowerCase();
+
+    if (exitCode === 127) return 'missing_command';
+
+    const missingHints = [
+        'command not found',
+        'not recognized as an internal or external command',
+        'enoent',
+        'no such file or directory',
+        'cannot find the file'
+    ];
+    if (missingHints.some((hint) => combined.includes(hint))) {
+        return 'missing_command';
+    }
+
+    if (combined.includes('spawn error') || combined.includes('spawn failed')) {
+        return 'runtime_error';
+    }
+
+    return 'test_fail';
+}
+
+function normalizeFailureReason(result: { reason?: string; stderr?: string }): string {
+    if (result.reason && result.reason.trim().length > 0) return result.reason.trim();
+    if (result.stderr && result.stderr.trim().length > 0) return result.stderr.trim();
+    return 'Unknown error';
+}
+
 const DEFAULT_ENV_ALLOWLIST = [
     "PATH", "HOME", "USERPROFILE", "TEMP", "TMP", "NODE_ENV", "CI", "npm_config_user_agent"
 ];
@@ -200,6 +236,36 @@ export async function runToolChecks(spec: Spec, repoRoot: string): Promise<ToolO
                         file: 'N/A',
                         details: `Tool '${tool.name}' failed with exit code ${res.code}. Reason: ${res.reason || 'Process exited with error'}`
                     });
+                } else {
+                    const classification = classifyToolFailure({
+                        exit_code: res.code,
+                        stderr: stderr,
+                        reason: res.reason
+                    });
+                    const normalized = normalizeFailureReason({ reason: res.reason, stderr });
+                    if (classification === 'missing_command') {
+                        violations.push({
+                            type: 'tool_missing',
+                            file: 'N/A',
+                            severity: 'warning',
+                            details: `Optional tool '${tool.name}' is missing: ${normalized}`,
+                            tool_name: tool.name,
+                            command: tool.command,
+                            exit_code: res.code,
+                            error: normalized
+                        });
+                    } else {
+                        violations.push({
+                            type: 'tool_optional_failed',
+                            file: 'N/A',
+                            severity: 'warning',
+                            details: `Optional tool '${tool.name}' failed: ${normalized}`,
+                            tool_name: tool.name,
+                            command: tool.command,
+                            exit_code: res.code,
+                            error: normalized
+                        });
+                    }
                 }
             } else {
                 console.log(`  PASS`);
@@ -207,11 +273,43 @@ export async function runToolChecks(spec: Spec, repoRoot: string): Promise<ToolO
 
         } catch (e: any) {
             console.log(`  ERROR: ${e.message}`);
-            violations.push({
-                type: 'tool_execution_error',
-                file: 'N/A',
-                details: `Failed to execute tool '${tool.name}': ${e.message}`
-            });
+            if (!tool.optional) {
+                violations.push({
+                    type: 'tool_execution_error',
+                    file: 'N/A',
+                    details: `Failed to execute tool '${tool.name}': ${e.message}`
+                });
+            } else {
+                const normalized = normalizeFailureReason({ reason: e.message, stderr: '' });
+                const classification = classifyToolFailure({
+                    exit_code: 127,
+                    stderr: '',
+                    reason: e.message
+                });
+                if (classification === 'missing_command') {
+                    violations.push({
+                        type: 'tool_missing',
+                        file: 'N/A',
+                        severity: 'warning',
+                        details: `Optional tool '${tool.name}' is missing: ${normalized}`,
+                        tool_name: tool.name,
+                        command: tool.command,
+                        exit_code: 127,
+                        error: normalized
+                    });
+                } else {
+                    violations.push({
+                        type: 'tool_optional_failed',
+                        file: 'N/A',
+                        severity: 'warning',
+                        details: `Optional tool '${tool.name}' failed: ${normalized}`,
+                        tool_name: tool.name,
+                        command: tool.command,
+                        exit_code: 127,
+                        error: normalized
+                    });
+                }
+            }
             results.push({
                 name: tool.name,
                 command: tool.command,
