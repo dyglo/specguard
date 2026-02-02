@@ -180,7 +180,7 @@ export async function runController(options: RunControllerOptions): Promise<numb
                 const reportPath = validation.reportPath ? ` See ${validation.reportPath}.` : '';
                 console.log(`✅ SpecGuard PASS with warnings: ${warningLabels}.${reportPath}`);
             } else {
-                console.log(`✅ SpecGuard PASS (iteration ${iteration})`);
+                console.log('✅ SpecGuard PASS. No fixes required.');
             }
             return 0;
         }
