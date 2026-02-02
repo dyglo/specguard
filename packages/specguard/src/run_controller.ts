@@ -119,6 +119,14 @@ export async function runController(options: RunControllerOptions): Promise<numb
         return 2;
     }
 
+    if (!options.cmd || options.cmd.length === 0) {
+        const report = buildAgentFailureReport('Missing agent command.', options.allowPolicyEdit);
+        const outputPath = selectRepairOutputPath(report, repoRoot);
+        writeRepairJson(report, outputPath);
+        console.error(report.next_action.agent_message);
+        return 2;
+    }
+
     const maxIterations = options.maxIterations ?? 3;
     let lastFailureSignature = '';
     let repeatedFailures = 0;
