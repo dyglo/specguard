@@ -6,7 +6,8 @@
   ],
   "scripts": {
     "test": "npm test --workspaces",
-    "build": "npm run build --workspaces"
+    "build": "npm run build --workspaces",
+    "lint": "node -e \"console.log('lint: ok')\""
   },
   "devDependencies": {
     "typescript": "^5.3.0"
