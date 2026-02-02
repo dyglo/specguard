@@ -18,6 +18,7 @@ export interface ValidateOptions {
     headRef?: string;
     format?: 'standard' | 'repair-json';
     allowPolicyEdit?: boolean;
+    emitJson?: boolean;
 }
 
 export interface ValidateResult {
@@ -85,7 +86,9 @@ export async function validateAndReport(options: ValidateOptions & { returnRepor
         });
         repairReport = result.report;
         repairPath = result.reportPath;
-        console.log(JSON.stringify(repairReport, null, 2));
+        if (options.emitJson !== false) {
+            console.log(JSON.stringify(repairReport, null, 2));
+        }
     } else {
         await generateReport(reportData, options.reportDir);
     }

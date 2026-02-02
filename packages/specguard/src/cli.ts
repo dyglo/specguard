@@ -1,6 +1,7 @@
 import { Command } from 'commander';
 import { validate } from './index.js';
 import { init } from './init.js';
+import { runController } from './run_controller.js';
 import path from 'path';
 import fs from 'fs';
 
@@ -84,6 +85,43 @@ program
             console.error('❌ Init failed:', e.message);
             process.exit(2);
         }
+    });
+
+program
+    .command('run')
+    .description('Run an agent command with SpecGuard loop control')
+    .option('--agent <agent>', 'Agent identifier', 'codex')
+    .option('--spec <path>', 'Path to spec.yaml')
+    .option('--repo-root <path>', 'Path to repository root (default: cwd)')
+    .option('--report-dir <path>', 'Path to report output directory')
+    .option('--max-iterations <count>', 'Maximum iterations (default: 3)')
+    .option('--allow-policy-edit', 'Allow changes under .ai/specguard/**')
+    .allowUnknownOption(true)
+    .action(async (options) => {
+        const delimiterIndex = process.argv.indexOf('--');
+        const cmd = delimiterIndex === -1 ? [] : process.argv.slice(delimiterIndex + 1);
+        if (cmd.length === 0) {
+            console.error('❌ Missing agent command. Use: specguard run --agent codex -- <command>');
+            process.exit(2);
+        }
+
+        const maxIterations = Number.parseInt(options.maxIterations || '3', 10);
+        if (!Number.isFinite(maxIterations) || maxIterations < 1) {
+            console.error(`❌ Invalid --max-iterations value: ${options.maxIterations}`);
+            process.exit(2);
+        }
+
+        const exitCode = await runController({
+            agent: options.agent,
+            cmd,
+            maxIterations,
+            specPath: options.spec,
+            repoRoot: options.repoRoot,
+            reportDir: options.reportDir,
+            allowPolicyEdit: !!options.allowPolicyEdit
+        });
+
+        process.exit(exitCode);
     });
 
 program.parse();
