@@ -38,6 +38,7 @@ export function classifyToolFailure(result: {
         'command not found',
         'not recognized as an internal or external command',
         'enoent',
+        'einval',
         'no such file or directory',
         'cannot find the file'
     ];
