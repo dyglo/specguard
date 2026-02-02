@@ -4,14 +4,14 @@ SpecGuard is a "Skills++" enforcement engine for code agents. It provides a robu
 
 ## Documentation
 
-For full guides and reference, see the [Documentation Index](packages/specguard/docs/README.md).
+For full guides and reference, see the [Documentation Index](docs/README.md).
 
-- [🚀 Quickstart](packages/specguard/docs/quickstart.md)
-- [🤖 Codex & Agents](packages/specguard/docs/codex-and-agents.md)
-- [🛠️ Spec Reference](packages/specguard/docs/spec-reference.md)
-- [📊 Reports](packages/specguard/docs/reports.md)
-- [🔄 CI Integration](packages/specguard/docs/ci-integration.md)
-- [🔐 Security](packages/specguard/docs/security.md)
+- [🚀 Quickstart](docs/quickstart.md)
+- [🤖 Codex & Agents](docs/codex-and-agents.md)
+- [🛠️ Spec Reference](docs/spec-reference.md)
+- [📊 Reports](docs/reports.md)
+- [🔄 CI Integration](docs/ci-integration.md)
+- [🔐 Security](docs/security.md)
 
 ## Examples
 

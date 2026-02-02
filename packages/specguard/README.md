@@ -11,14 +11,14 @@ Production-grade "Skills++" enforcement engine for code agents.
 
 ## Documentation
 
-For full guides and reference, see the [Documentation Index](docs/README.md).
+For full guides and reference, see the [Documentation Index](/docs/README.md).
 
-- [🚀 Quickstart](docs/quickstart.md)
-- [🤖 Codex & Agents](docs/codex-and-agents.md)
-- [🛠️ Spec Reference](docs/spec-reference.md)
-- [📊 Reports](docs/reports.md)
-- [🔄 CI Integration](docs/ci-integration.md)
-- [🔐 Security](docs/security.md)
+- [🚀 Quickstart](/docs/quickstart.md)
+- [🤖 Codex & Agents](/docs/codex-and-agents.md)
+- [🛠️ Spec Reference](/docs/spec-reference.md)
+- [📊 Reports](/docs/reports.md)
+- [🔄 CI Integration](/docs/ci-integration.md)
+- [🔐 Security](/docs/security.md)
 
 ## Installation
 
