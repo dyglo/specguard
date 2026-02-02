@@ -54,4 +54,35 @@ describe('generateReport', () => {
             expect.stringContaining('"run_id": "1111-2222"')
         );
     });
+
+    it('should handle skipped tools without stderr', async () => {
+        const reportDir = path.normalize('/reports');
+        vi.spyOn(fs, 'existsSync').mockReturnValue(true);
+        const writeFile = vi.spyOn(fs, 'writeFileSync');
+        vi.spyOn(fs, 'mkdirSync');
+
+        const data: any = {
+            status: 'PASS',
+            spec: { spec_id: 'test', version: '1' },
+            timestamp: '2023-01-01',
+            changedFiles: [],
+            violations: [],
+            toolResults: [{
+                name: 'Optional',
+                command: 'missing',
+                status: 'SKIPPED',
+                exit_code: null,
+                optional: true,
+                duration_ms: 10
+            }],
+            runMeta: { diffMode: 'working', repoRoot: '/repo' }
+        };
+
+        await generateReport(data, reportDir);
+
+        expect(writeFile).toHaveBeenCalledWith(
+            expect.stringContaining('.json'),
+            expect.stringContaining('"output_tail": ""')
+        );
+    });
 });

@@ -39,7 +39,7 @@ export async function generateReport(data: ReportData, reportDir: string) {
             const logFile = `${tool.name.replace(/\s+/g, '_')}.log`;
             const logPath = path.join(toolLogDir, logFile);
 
-            const combinedLog = `STDOUT:\n${tool.stdout}\n\nSTDERR:\n${tool.stderr}\n`;
+            const combinedLog = `STDOUT:\n${tool.stdout || ''}\n\nSTDERR:\n${tool.stderr || ''}\n`;
             // Here we would apply redaction to combinedLog if we were inside the tool runner or here. 
             // Assuming tool.stdout/stderr are already redacted or redaction happens before writing.
             // Re-implementing basic redaction here just in case:
@@ -53,7 +53,7 @@ export async function generateReport(data: ReportData, reportDir: string) {
                 stdout: undefined, // Don't bloat JSON with full logs
                 stderr: undefined,
                 log_path: `logs/${runId}/${logFile}`,
-                output_tail: tool.stderr.slice(-1000) // Keep accessible tail
+                output_tail: (tool.stderr || '').slice(-1000) // Keep accessible tail
             });
         }
     }
