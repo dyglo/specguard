@@ -165,7 +165,23 @@ export async function runController(options: RunControllerOptions): Promise<numb
         });
 
         if (validation.success) {
-            console.log(`✅ SpecGuard PASS (iteration ${iteration})`);
+            const warnings = validation.report?.summary?.warnings || 0;
+            if (warnings > 0) {
+                const warningLabels = (validation.report?.findings || [])
+                    .filter((finding) => finding.severity === 'warning')
+                    .map((finding) => {
+                        const toolEvidence = finding.evidence?.find((item) => item.startsWith('Tool: '));
+                        if (toolEvidence) {
+                            return `${finding.id} (${toolEvidence.replace('Tool: ', '')})`;
+                        }
+                        return finding.id;
+                    })
+                    .join(', ');
+                const reportPath = validation.reportPath ? ` See ${validation.reportPath}.` : '';
+                console.log(`✅ SpecGuard PASS with warnings: ${warningLabels}.${reportPath}`);
+            } else {
+                console.log(`✅ SpecGuard PASS (iteration ${iteration})`);
+            }
             return 0;
         }
 

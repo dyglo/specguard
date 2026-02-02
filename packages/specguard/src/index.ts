@@ -61,7 +61,9 @@ export async function validateAndReport(options: ValidateOptions & { returnRepor
     violations.push(...toolOutputs.violations);
 
     // 4. Report
-    const status = violations.length === 0 ? 'PASS' : 'FAIL';
+    const warningViolations = violations.filter((violation) => violation.severity === 'warning');
+    const errorViolations = violations.filter((violation) => violation.severity !== 'warning');
+    const status = errorViolations.length === 0 ? 'PASS' : 'FAIL';
     const reportData = {
         status,
         spec,
@@ -95,8 +97,10 @@ export async function validateAndReport(options: ValidateOptions & { returnRepor
 
     if (status === 'FAIL') {
         logger('\n❌ Validation FAILED');
+    } else if (warningViolations.length > 0) {
+        logger(`\n✅ SpecGuard PASS (with warnings: ${warningViolations.length}). See report.`);
     } else {
-        logger('\n✅ Validation PASSED');
+        logger('\n✅ SpecGuard PASS. No fixes required.');
     }
 
     return {

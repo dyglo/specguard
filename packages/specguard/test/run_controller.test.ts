@@ -70,6 +70,30 @@ describe('runController', () => {
         expect(code).toBe(0);
     });
 
+    it('prints PASS with warnings summary', async () => {
+        const warnReport = createReport([]);
+        warnReport.summary.warnings = 1;
+        warnReport.findings = [
+            {
+                id: 'SG-TOOL-MISSING',
+                severity: 'warning',
+                title: 'Optional tool missing',
+                reason: 'missing',
+                locations: [],
+                evidence: ['Tool: Lint'],
+                acceptance: ['Install tool.']
+            }
+        ];
+        mockValidate.mockResolvedValue({ success: true, report: warnReport, reportPath: '/repo/.ai/specguard/reports/report.json' });
+        const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+        const code = await runController({ agent: 'codex', cmd: ['echo', 'hi'], repoRoot: '/repo' });
+        expect(code).toBe(0);
+        expect(logSpy.mock.calls.some((call) => call[0].includes('PASS with warnings'))).toBe(true);
+
+        logSpy.mockRestore();
+    });
+
     it('writes repair json to repo root when blocked', async () => {
         mockValidate.mockResolvedValue({ success: false, report: createReport() });
         const code = await runController({ agent: 'codex', cmd: ['echo'], repoRoot: '/repo', maxIterations: 1 });
