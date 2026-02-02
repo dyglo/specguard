@@ -26,6 +26,12 @@ Run your first validation:
 npx specguard@latest validate
 ```
 
+For agent repair loops, use the repair JSON format:
+
+```bash
+npx specguard@latest validate --format repair-json
+```
+
 SpecGuard will check for:
 - Forbidden file patterns (e.g., secrets, large binaries).
 - Run any tool-verified steps defined in your spec (e.g., `npm run lint`).

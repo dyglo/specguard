@@ -28,6 +28,36 @@ This repository uses **SpecGuard** for validation. As an AI agent, you **MUST**:
 4. **Self-Correction**: The agent uses the "Agent Summary" and "Top Violations" list to fix its own errors without human intervention.
 5. **Repeat**: The agent validates again until the result is **PASS**.
 
+## SpecGuard Run Controller
+
+Use `specguard run` as a deterministic wrapper for closed-loop agent workflows:
+
+```bash
+npx specguard run --agent codex -- <agent command...>
+```
+
+On failure, SpecGuard prints `next_action.agent_message` and writes a repair JSON file. The agent can read the file path from the environment:
+
+- `SPEC_GUARD_REPAIR_JSON`
+- `SPEC_GUARD_ITERATION`
+
+### VS Code Tasks Example
+
+```json
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "SpecGuard Run (Codex)",
+      "type": "shell",
+      "command": "npx",
+      "args": ["specguard", "run", "--agent", "codex", "--", "codex-cli", "apply"],
+      "problemMatcher": []
+    }
+  ]
+}
+```
+
 ## Encouraging Agent Compliance
 
 To ensure agents follow the workflow, include a directive in your system prompt or project instructions:

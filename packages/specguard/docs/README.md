@@ -19,5 +19,6 @@ Welcome to the SpecGuard documentation. SpecGuard is a production-grade enforcem
 1. **Init**: Scaffold your configuration with `npx specguard@latest init`.
 2. **Configure**: Tighten your policies in `.ai/specguard/spec.yaml`.
 3. **Validate**: Run `npx specguard@latest validate` before committing.
-4. **Iterate**: Use agent-friendly reports to quickly fix violations.
-5. **Enforce**: Run the same checks in CI to guarantee repository hygiene.
+4. **Repair Loop**: Use `npx specguard@latest validate --format repair-json` or `npx specguard@latest run --agent codex -- <cmd>` to automate fixes.
+5. **Iterate**: Use agent-friendly reports to quickly fix violations.
+6. **Enforce**: Run the same checks in CI to guarantee repository hygiene.

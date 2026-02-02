@@ -42,6 +42,16 @@ To prevent sensitive data from leaking into logs or reports, SpecGuard implement
 - **Redaction**: Any matches against `secret_patterns` defined in `spec.yaml` are replaced with `***REDACTED***`.
 - **Scope**: Redaction applies to the raw log files and the `output_tail` included in the JSON report.
 
+## Policy Tamper Protection
+
+SpecGuard fails validation if files under `.ai/specguard/**` are modified.
+- **Why?**: These files define and enforce the safety policy itself.
+- **Override**: Use `--allow-policy-edit` only when you intend to change SpecGuard policy files.
+
+```bash
+npx specguard validate --allow-policy-edit
+```
+
 ## Threat Model
 
 - **Untrusted Specs**: SpecGuard assumes the `spec.yaml` in the repository is trusted. If an attacker can modify your spec, they can change what tools run.

@@ -40,6 +40,27 @@ A concise block at the top containing:
 | `tool_steps[].log_path` | Relative path to the full log file. |
 | `violations` | List of deterministic rule violations (glob/secret). |
 
+## Repair JSON (Agent Loop)
+
+Use the repair JSON format for deterministic agent workflows:
+
+```bash
+npx specguard validate --format repair-json
+```
+
+This writes a repair report to `.ai/specguard/reports/specguard_repair_*.json` **and** prints the JSON to stdout for piping.
+
+### Schema (v0.1.0)
+
+Key fields:
+- `schema_version`: Repair JSON schema version.
+- `run_id`: Unique run identifier.
+- `verdict`: `PASS` or `FAIL`.
+- `summary`: `{ errors, warnings, drift_score? }`.
+- `findings[]`: `{ id, severity, title, reason, locations[], evidence[], acceptance[], fix? }`.
+- `constraints`: `{ blocked_paths, allow_shell_effective, required_steps? }`.
+- `next_action`: `{ agent_message, ordered_fix_plan[] }`.
+
 ## Integration
 
 ### CI Artifacts
