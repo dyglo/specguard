@@ -17,6 +17,8 @@ program
     .option('--spec <path>', 'Path to spec.yaml')
     .option('--repo-root <path>', 'Path to repository root (default: cwd)')
     .option('--report-dir <path>', 'Path to report output directory')
+    .option('--format <format>', 'Output format: standard | repair-json')
+    .option('--allow-policy-edit', 'Allow changes under .ai/specguard/**')
     .option('--staged', 'Alias for --diff-mode staged')
     .option('--diff-mode <mode>', 'working | staged | range (default: working)')
     .option('--base <ref>', 'Base ref for range diff mode')
@@ -48,13 +50,21 @@ program
                 process.exit(2);
             }
 
+            const format = options.format || 'standard';
+            if (!['standard', 'repair-json'].includes(format)) {
+                console.error(`❌ Invalid format: ${format}`);
+                process.exit(2);
+            }
+
             const success = await validate({
                 specPath,
                 repoRoot,
                 reportDir,
                 diffMode: diffMode as any,
                 baseRef: options.base,
-                headRef: options.head
+                headRef: options.head,
+                format,
+                allowPolicyEdit: !!options.allowPolicyEdit
             });
             process.exit(success ? 0 : 1);
         } catch (error: any) {
