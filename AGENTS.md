@@ -41,3 +41,28 @@ When you have successfully passed validation, your final response to the user mu
 >
 > **Validation**: PASS
 > **Report**: `.ai/specguard/reports/specguard_20231027_103000.md`
+
+
+---
+
+## 🛡️ SpecGuard Enforced
+
+This repository uses **SpecGuard** to ensure code quality and security.
+As an AI agent, you **MUST** follow this workflow:
+
+1.  **Edit**: Make your code changes.
+2.  **Validate**: Run the validation script to check for issues.
+    ```bash
+    npx specguard validate --staged
+    ```
+3.  **Repair**: If validation fails, fix the errors and re-run.
+4.  **Report**: Include the validation summary in your final response.
+
+**Artifacts Location:**
+- Spec: `.ai/specguard/spec.yaml`
+- Reports: `.ai/specguard/reports/`
+
+**Safety Rules:**
+- 🚫 NO secrets in code.
+- 🚫 NO shell execution in tool steps (unless explicitly allowed).
+- ✅ ALWAYS verify your changes.

@@ -2,3 +2,5 @@ node_modules
 dist
 reports
 packages/specguard/dist
+.ai/specguard/reports/**
+!.ai/specguard/reports/.gitkeep
