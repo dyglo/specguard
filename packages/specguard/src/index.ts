@@ -3,6 +3,7 @@ import path from 'path';
 import { loadSpec } from './spec/loader.js';
 import { validateForbiddenGlobs } from './validators/file_system.js';
 import { validateSecrets } from './validators/secrets.js';
+import { validatePolicyTamper } from './validators/policy_tamper.js';
 import { runToolChecks } from './validators/tools.js';
 import { getChangedFiles, DiffMode } from './git/diff.js';
 import { generateReport } from './reporting/json_reporter.js';
@@ -50,6 +51,7 @@ export async function validateAndReport(options: ValidateOptions & { returnRepor
     const toolResults: any[] = [];
 
     // 3. Validators
+    violations.push(...validatePolicyTamper(changedFiles, options.allowPolicyEdit));
     violations.push(...validateForbiddenGlobs(spec, changedFiles));
     violations.push(...await validateSecrets(spec, changedFiles, options.repoRoot));
 
