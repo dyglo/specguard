@@ -6,6 +6,7 @@ import { validateSecrets } from './validators/secrets.js';
 import { runToolChecks } from './validators/tools.js';
 import { getChangedFiles, DiffMode } from './git/diff.js';
 import { generateReport } from './reporting/json_reporter.js';
+import { generateRepairJsonReport, RepairJsonReport } from './reporting/repair_json_reporter.js';
 
 export interface ValidateOptions {
     specPath: string;
@@ -14,12 +15,23 @@ export interface ValidateOptions {
     diffMode?: DiffMode;
     baseRef?: string;
     headRef?: string;
+    format?: 'standard' | 'repair-json';
+    allowPolicyEdit?: boolean;
 }
 
-export async function validate(options: ValidateOptions): Promise<boolean> {
-    console.log(`🛡️  SpecGuard: Running validation...`);
-    console.log(`   Spec: ${options.specPath}`);
-    console.log(`   Repo: ${options.repoRoot}`);
+export interface ValidateResult {
+    success: boolean;
+    report?: RepairJsonReport;
+    reportPath?: string;
+}
+
+export async function validateAndReport(options: ValidateOptions & { returnReport?: boolean }): Promise<ValidateResult> {
+    const format = options.format || 'standard';
+    const logger = format === 'repair-json' ? console.error : console.log;
+
+    logger(`🛡️  SpecGuard: Running validation...`);
+    logger(`   Spec: ${options.specPath}`);
+    logger(`   Repo: ${options.repoRoot}`);
 
     const diffMode = options.diffMode || 'working';
 
@@ -32,7 +44,7 @@ export async function validate(options: ValidateOptions): Promise<boolean> {
         base: options.baseRef,
         head: options.headRef
     });
-    console.log(`   Detected ${changedFiles.length} changed files (${diffMode} mode).`);
+    logger(`   Detected ${changedFiles.length} changed files (${diffMode} mode).`);
 
     const violations: any[] = [];
     const toolResults: any[] = [];
@@ -47,7 +59,7 @@ export async function validate(options: ValidateOptions): Promise<boolean> {
 
     // 4. Report
     const status = violations.length === 0 ? 'PASS' : 'FAIL';
-    await generateReport({
+    const reportData = {
         status,
         spec,
         changedFiles,
@@ -60,13 +72,36 @@ export async function validate(options: ValidateOptions): Promise<boolean> {
             baseRef: options.baseRef,
             headRef: options.headRef
         }
-    }, options.reportDir);
+    };
+
+    let repairReport: RepairJsonReport | undefined;
+    let repairPath: string | undefined;
+
+    if (format === 'repair-json') {
+        const result = generateRepairJsonReport(reportData, options.reportDir, {
+            allowPolicyEdit: options.allowPolicyEdit
+        });
+        repairReport = result.report;
+        repairPath = result.reportPath;
+        console.log(JSON.stringify(repairReport, null, 2));
+    } else {
+        await generateReport(reportData, options.reportDir);
+    }
 
     if (status === 'FAIL') {
-        console.log('\n❌ Validation FAILED');
-        return false;
+        logger('\n❌ Validation FAILED');
     } else {
-        console.log('\n✅ Validation PASSED');
-        return true;
+        logger('\n✅ Validation PASSED');
     }
+
+    return {
+        success: status === 'PASS',
+        report: options.returnReport ? repairReport : undefined,
+        reportPath: options.returnReport ? repairPath : undefined
+    };
+}
+
+export async function validate(options: ValidateOptions): Promise<boolean> {
+    const result = await validateAndReport(options);
+    return result.success;
 }
