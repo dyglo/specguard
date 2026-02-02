@@ -114,6 +114,16 @@ const VIOLATION_DEFS: Record<string, {
         fixSteps: [
             'Revert changes under .ai/specguard/**, or rerun with --allow-policy-edit if authorized.'
         ]
+    },
+    tool_missing: {
+        id: 'SG-TOOL-MISSING',
+        title: 'Optional tool missing',
+        acceptance: ['Install the missing tool or remove the optional step from spec.']
+    },
+    tool_optional_failed: {
+        id: 'SG-TOOL-FAILED-OPTIONAL',
+        title: 'Optional tool failed',
+        acceptance: ['Fix optional tool failures or remove the optional step from spec.']
     }
 };
 
@@ -140,7 +150,16 @@ function buildFinding(violation: any): RepairJsonFinding {
     const def = VIOLATION_DEFS[violation.type] || DEFAULT_DEF;
     const severity: RepairSeverity = violation.severity === 'warning' ? 'warning' : 'error';
     const reason = violation.details || 'Policy violation detected.';
-    const evidence = violation.details ? [violation.details] : [];
+    const evidence: string[] = [];
+    if (violation.tool_name) evidence.push(`Tool: ${violation.tool_name}`);
+    if (violation.command) evidence.push(`Command: ${violation.command}`);
+    if (violation.exit_code !== undefined && violation.exit_code !== null) {
+        evidence.push(`Exit Code: ${violation.exit_code}`);
+    }
+    if (violation.error) evidence.push(`Error: ${violation.error}`);
+    if (evidence.length === 0 && violation.details) {
+        evidence.push(violation.details);
+    }
     const finding: RepairJsonFinding = {
         id: def.id,
         severity,
@@ -151,7 +170,10 @@ function buildFinding(violation: any): RepairJsonFinding {
         acceptance: def.acceptance
     };
 
-    if (def.fixSummary && def.fixSteps) {
+    if (violation.type === 'tool_missing') {
+        const guidance = buildMissingToolFix(violation.command || '');
+        finding.fix = guidance;
+    } else if (def.fixSummary && def.fixSteps) {
         finding.fix = {
             summary: def.fixSummary,
             steps: def.fixSteps
@@ -159,6 +181,40 @@ function buildFinding(violation: any): RepairJsonFinding {
     }
 
     return finding;
+}
+
+function buildMissingToolFix(command: string): { summary: string; steps: string[] } {
+    const parts = command.trim().split(/\s+/);
+    const binary = parts[0] || 'tool';
+    let scriptName = '';
+
+    if (['npm', 'pnpm'].includes(binary) && parts[1] === 'run' && parts[2]) {
+        scriptName = parts[2];
+    } else if (binary === 'yarn' && parts[1] && parts[1] !== 'run') {
+        scriptName = parts[1];
+    } else if (binary === 'yarn' && parts[1] === 'run' && parts[2]) {
+        scriptName = parts[2];
+    } else if (binary === 'pnpm' && parts[1] && parts[1] !== 'run') {
+        scriptName = parts[1];
+    }
+
+    if (scriptName) {
+        return {
+            summary: `Add script '${scriptName}' or remove optional step`,
+            steps: [
+                `Add script '${scriptName}' to package.json, or remove this optional step from spec.`,
+                'Re-run SpecGuard validation.'
+            ]
+        };
+    }
+
+    return {
+        summary: `Install missing tool '${binary}' or adjust command`,
+        steps: [
+            `Install the dependency that provides '${binary}', or adjust the command to an available tool.`,
+            'Re-run SpecGuard validation.'
+        ]
+    };
 }
 
 function buildConstraints(spec: Spec, allowPolicyEdit?: boolean): RepairJsonReport['constraints'] {
@@ -181,21 +237,32 @@ function buildConstraints(spec: Spec, allowPolicyEdit?: boolean): RepairJsonRepo
     };
 }
 
-function buildNextAction(findings: RepairJsonFinding[], verdict: 'PASS' | 'FAIL'): RepairJsonReport['next_action'] {
-    if (verdict === 'PASS') {
-        return {
-            agent_message: 'SpecGuard PASS. No fixes required.',
-            ordered_fix_plan: []
-        };
-    }
-
+function buildNextAction(findings: RepairJsonFinding[], verdict: 'PASS' | 'FAIL', errorCount: number): RepairJsonReport['next_action'] {
     const orderedFixPlan = findings.map((finding) => {
         return finding.fix?.summary || `Resolve ${finding.id}: ${finding.title}`;
     });
 
-    const ids = findings.map((finding) => finding.id).join(', ');
+    const warningFindings = findings.filter((finding) => finding.severity === 'warning');
+
+    if (verdict === 'PASS') {
+        if (warningFindings.length === 0) {
+            return {
+                agent_message: 'SpecGuard PASS. No fixes required.',
+                ordered_fix_plan: []
+            };
+        }
+
+        const warningIds = warningFindings.map((finding) => finding.id).join(', ');
+        const recommendation = warningFindings[0]?.fix?.summary || warningFindings[0]?.title;
+        return {
+            agent_message: `SpecGuard PASS with warnings (${warningFindings.length}): ${warningIds}. Recommended fix: ${recommendation}.`,
+            ordered_fix_plan: orderedFixPlan
+        };
+    }
+
+    const errorIds = findings.filter((finding) => finding.severity === 'error').map((finding) => finding.id).join(', ');
     return {
-        agent_message: `Fix ${findings.length} error(s) (${ids}) then re-run: npx specguard validate --format repair-json`,
+        agent_message: `Fix ${errorCount} error(s) (${errorIds}) then re-run: npx specguard validate --format repair-json`,
         ordered_fix_plan: orderedFixPlan
     };
 }
@@ -229,7 +296,7 @@ export function buildRepairJsonReport(data: RepairReportData, options: RepairRep
         },
         findings,
         constraints: buildConstraints(data.spec, options.allowPolicyEdit),
-        next_action: buildNextAction(findings, verdict)
+        next_action: buildNextAction(findings, verdict, errors)
     };
 }
 

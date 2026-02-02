@@ -156,4 +156,27 @@ describe('buildRepairJsonReport', () => {
           }"
         `);
     });
+
+    it('should include warnings and guidance for missing optional tool', () => {
+        const data = {
+            ...baseData,
+            status: 'PASS',
+            violations: [
+                {
+                    type: 'tool_missing',
+                    severity: 'warning',
+                    details: 'Optional tool missing',
+                    tool_name: 'Lint',
+                    command: 'npm run lint',
+                    exit_code: 127,
+                    error: 'command not found'
+                }
+            ]
+        };
+
+        const report = buildRepairJsonReport(data);
+        expect(report.summary.warnings).toBe(1);
+        expect(report.next_action.agent_message).toContain('PASS with warnings');
+        expect(report.findings[0].id).toBe('SG-TOOL-MISSING');
+    });
 });
