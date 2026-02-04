@@ -1,5 +1,5 @@
 {
-  "name": "specguard-monorepo",
+  "name": "silicon-loop-monorepo",
   "private": true,
   "workspaces": [
     "packages/*"

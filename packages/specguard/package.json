@@ -1,7 +1,7 @@
 {
-    "name": "specguard",
+    "name": "silicon-loop",
     "version": "0.2.1",
-    "description": "Production-grade SpecGuard validator",
+    "description": "Production-grade Silicon-Loop validator",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
     "type": "module",
@@ -10,7 +10,7 @@
         "node": ">=18"
     },
     "bin": {
-        "specguard": "bin/specguard"
+        "silicon-loop": "bin/specguard"
     },
     "files": [
         "dist",

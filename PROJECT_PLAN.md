@@ -1,11 +1,11 @@
-# PROJECT_PLAN — SpecGuard (Repo-Local Spec Enforcement Engine)
+# PROJECT_PLAN — Silicon-Loop (Repo-Local Spec Enforcement Engine)
 
 ## Purpose
-SpecGuard is a repo-local “Skills++” enforcement engine that improves code-agent reliability by combining:
+Silicon-Loop is a repo-local “Skills++” enforcement engine that improves code-agent reliability by combining:
 - **Repo instructions** (AGENTS.md) that shape agent behavior
-- **Spec pack** (.ai/specguard/spec.yaml) that defines enforceable constraints
-- **Validator runtime** (.ai/specguard/specguard.py) that deterministically validates changes and tool checks
-- **Evidence artifacts** (.ai/specguard/reports/*) used for auditability and CI gating
+- **Spec pack** (.ai/silicon-loop/spec.yaml) that defines enforceable constraints
+- **Validator runtime** (Silicon-Loop CLI) that deterministically validates changes and tool checks
+- **Evidence artifacts** (.ai/silicon-loop/reports/*) used for auditability and CI gating
 
 Non-goals:
 - No API proxies.
